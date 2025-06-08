@@ -1,0 +1,662 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard - J&H Apartment Management</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="/css/style.css">
+  <style>
+    .branch-card {
+      border: 1px solid #dee2e6;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+    .branch-card:hover {
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .branch-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 15px 20px;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .branch-header:hover {
+      background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+    }
+    .branch-info {
+      flex-grow: 1;
+    }
+    .branch-stats {
+      display: flex;
+      gap: 15px;
+      font-size: 0.9em;
+    }
+    .branch-toggle {
+      font-size: 1.2em;
+      transition: transform 0.3s ease;
+    }
+    .branch-toggle.expanded {
+      transform: rotate(180deg);
+    }
+    .rooms-container {
+      display: none;
+      padding: 20px;
+      background: #f8f9fa;
+    }
+    .rooms-container.show {
+      display: block;
+    }
+    .room-item {
+      background: white;
+      border: 1px solid #e9ecef;
+      border-radius: 6px;
+      padding: 15px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .room-info h6 {
+      margin: 0 0 5px 0;
+      color: #495057;
+    }
+    .room-info small {
+      color: #6c757d;
+    }
+    .add-branch-btn {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: none;
+      color: white;
+      font-size: 24px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      transition: all 0.3s ease;
+    }
+    .add-branch-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.2);
+    }
+    .empty-state {
+      text-align: center;
+      padding: 60px 20px;
+      color: #6c757d;
+    }
+    .empty-state i {
+      font-size: 4rem;
+      margin-bottom: 20px;
+      opacity: 0.5;
+    }
+  </style>
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h3 class="sidebar-brand">J&H Apartment</h3>
+    </div>
+    <ul class="sidebar-menu">
+      <li><a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+      <li><a href="/tenants"><i class="fas fa-users"></i> Tenants</a></li>
+      <li><a href="/rooms"><i class="fas fa-door-open"></i> Rooms</a></li>
+      <li><a href="/billing"><i class="fas fa-file-invoice-dollar"></i> Billing</a></li>
+      <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <div class="container-fluid">
+      <!-- Header -->
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+          <h1 class="h3 mb-0">Dashboard</h1>
+          <p class="text-muted">Welcome back, <span id="userName">Admin</span>!</p>
+        </div>
+        <button class="btn btn-sm btn-outline-primary d-md-none" id="sidebarToggle">
+          <i class="fas fa-bars"></i>
+        </button>
+      </div>
+
+      <!-- Stats Cards -->
+      <div class="row">
+        <!-- Branches Stats -->
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="card">
+            <div class="stats-card">
+              <div class="stats-icon bg-primary text-white">
+                <i class="fas fa-building"></i>
+              </div>
+              <div class="stats-info">
+                <h5 id="totalBranches">0</h5>
+                <p>Total Branches</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Rooms Stats -->
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="card">
+            <div class="stats-card">
+              <div class="stats-icon bg-success text-white">
+                <i class="fas fa-door-open"></i>
+              </div>
+              <div class="stats-info">
+                <h5 id="totalRooms">0</h5>
+                <p>Total Rooms</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Occupied Rooms -->
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="card">
+            <div class="stats-card">
+              <div class="stats-icon bg-info text-white">
+                <i class="fas fa-check-circle"></i>
+              </div>
+              <div class="stats-info">
+                <h5 id="occupiedRooms">0</h5>
+                <p>Occupied Rooms</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Revenue -->
+        <div class="col-md-6 col-lg-3 mb-4">
+          <div class="card">
+            <div class="stats-card">
+              <div class="stats-icon bg-warning text-white">
+                <i class="fas fa-peso-sign"></i>
+              </div>
+              <div class="stats-info">
+                <h5 id="totalRevenue">₱0</h5>
+                <p>Monthly Revenue</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Branches Section -->
+      <div class="row">
+        <div class="col-12">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0">
+                <i class="fas fa-building me-2"></i>Branches & Rooms
+              </h5>
+              <button class="btn btn-primary btn-sm" onclick="showAddBranchModal()">
+                <i class="fas fa-plus me-1"></i>Add Branch
+              </button>
+            </div>
+            <div class="card-body">
+              <div id="branchesContainer">
+                <!-- Branches will be loaded here -->
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="row mt-4">
+        <!-- Unpaid Bills -->
+        <div class="col-lg-6 mb-4">
+          <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+              <h5 class="card-title mb-0">Unpaid Bills</h5>
+              <a href="/billing" class="btn btn-sm btn-outline-primary">View All</a>
+            </div>
+            <div class="card-body">
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Tenant</th>
+                      <th>Room</th>
+                      <th>Amount</th>
+                      <th>Due Date</th>
+                      <th>Status</th>
+                    </tr>
+                  </thead>
+                  <tbody id="unpaidBillsTable">
+                    <!-- Unpaid bills will be loaded here -->
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="col-lg-6 mb-4">
+          <div class="card">
+            <div class="card-header">
+              <h5 class="card-title mb-0">Quick Actions</h5>
+            </div>
+            <div class="card-body">
+              <div class="d-grid gap-2">
+                <button class="btn btn-outline-primary" onclick="showAddBranchModal()">
+                  <i class="fas fa-building me-2"></i>Add New Branch
+                </button>
+                <button class="btn btn-outline-success" onclick="showAddRoomModal()">
+                  <i class="fas fa-door-open me-2"></i>Add New Room
+                </button>
+                <a href="/tenants" class="btn btn-outline-info">
+                  <i class="fas fa-user-plus me-2"></i>Add New Tenant
+                </a>
+                <a href="/billing" class="btn btn-outline-warning">
+                  <i class="fas fa-file-invoice me-2"></i>Create Bill
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Branch Modal -->
+  <div class="modal fade" id="addBranchModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New Branch</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addBranchForm">
+            <div class="mb-3">
+              <label for="branchName" class="form-label">Branch Name *</label>
+              <input type="text" class="form-control" id="branchName" required>
+            </div>
+            <div class="mb-3">
+              <label for="branchDescription" class="form-label">Description</label>
+              <textarea class="form-control" id="branchDescription" rows="3"></textarea>
+            </div>
+            <div class="mb-3">
+              <label for="branchAddress" class="form-label">Address</label>
+              <textarea class="form-control" id="branchAddress" rows="2"></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="addBranch()">Add Branch</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Room Modal -->
+  <div class="modal fade" id="addRoomModal" tabindex="-1">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Add New Room</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <form id="addRoomForm">
+            <div class="mb-3">
+              <label for="roomBranch" class="form-label">Branch *</label>
+              <select class="form-select" id="roomBranch" required>
+                <option value="">Select Branch</option>
+              </select>
+            </div>
+            <div class="mb-3">
+              <label for="roomNumber" class="form-label">Room Number *</label>
+              <input type="text" class="form-control" id="roomNumber" required>
+            </div>
+            <div class="mb-3">
+              <label for="monthlyRent" class="form-label">Monthly Rent *</label>
+              <input type="number" class="form-control" id="monthlyRent" step="0.01" required>
+            </div>
+            <div class="mb-3">
+              <label for="roomStatus" class="form-label">Status</label>
+              <select class="form-select" id="roomStatus">
+                <option value="vacant">Vacant</option>
+                <option value="occupied">Occupied</option>
+                <option value="maintenance">Maintenance</option>
+              </select>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="addRoom()">Add Room</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/common.js"></script>
+  <script>
+    let branches = [];
+
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize common elements and check authentication
+      initCommon();
+      
+      // Load dashboard data
+      loadDashboardData();
+    });
+    
+    // Load dashboard data
+    async function loadDashboardData() {
+      try {
+        const headers = getAuthHeaders();
+        
+        // Fetch branch stats
+        const branchStatsResponse = await fetch('/api/branches/stats', { headers });
+        const branchStatsData = await branchStatsResponse.json();
+        
+        if (branchStatsData.success) {
+          document.getElementById('totalBranches').textContent = branchStatsData.stats.total_branches || 0;
+          document.getElementById('totalRooms').textContent = branchStatsData.stats.total_rooms || 0;
+          document.getElementById('occupiedRooms').textContent = branchStatsData.stats.occupied_rooms || 0;
+        }
+        
+        // Fetch payment stats
+        const paymentStatsResponse = await fetch('/api/payments/stats', { headers });
+        const paymentStatsData = await paymentStatsResponse.json();
+        
+        if (paymentStatsData.success) {
+          document.getElementById('totalRevenue').textContent = formatCurrency(paymentStatsData.stats.monthly_collected);
+        }
+        
+        // Fetch unpaid bills
+        const unpaidBillsResponse = await fetch('/api/bills/unpaid', { headers });
+        const unpaidBillsData = await unpaidBillsResponse.json();
+        
+        if (unpaidBillsData.success) {
+          const unpaidBillsTable = document.getElementById('unpaidBillsTable');
+          unpaidBillsTable.innerHTML = '';
+          
+          if (unpaidBillsData.bills.length === 0) {
+            unpaidBillsTable.innerHTML = '<tr><td colspan="5" class="text-center">No unpaid bills</td></tr>';
+          } else {
+            // Display up to 5 unpaid bills
+            unpaidBillsData.bills.slice(0, 5).forEach(bill => {
+              const row = `
+                <tr>
+                  <td>${bill.tenant_name}</td>
+                  <td>${bill.room_number}</td>
+                  <td>${formatCurrency(bill.amount)}</td>
+                  <td>${formatDate(bill.due_date)}</td>
+                  <td><span class="badge bg-${bill.status === 'partial' ? 'warning' : 'danger'}">${bill.status}</span></td>
+                </tr>
+              `;
+              unpaidBillsTable.innerHTML += row;
+            });
+          }
+        }
+        
+        // Load branches
+        await loadBranches();
+        
+      } catch (error) {
+        console.error('Error loading dashboard data:', error);
+      }
+    }
+
+    // Load branches with rooms
+    async function loadBranches() {
+      try {
+        const headers = getAuthHeaders();
+        const response = await fetch('/api/branches', { headers });
+        const data = await response.json();
+        
+        if (data.success) {
+          branches = data.branches;
+          displayBranches();
+          populateBranchSelect();
+        }
+      } catch (error) {
+        console.error('Error loading branches:', error);
+      }
+    }
+
+    // Display branches
+    function displayBranches() {
+      const container = document.getElementById('branchesContainer');
+      
+      if (branches.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-building"></i>
+            <h4>No Branches Found</h4>
+            <p>Get started by adding your first branch</p>
+            <button class="btn btn-primary" onclick="showAddBranchModal()">
+              <i class="fas fa-plus me-2"></i>Add Branch
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      container.innerHTML = branches.map(branch => `
+        <div class="branch-card">
+          <div class="branch-header" onclick="toggleBranch(${branch.id})">
+            <div class="branch-info">
+              <h5 class="mb-1">${branch.name}</h5>
+              <small>${branch.description || 'No description'}</small>
+            </div>
+            <div class="branch-stats">
+              <span><i class="fas fa-door-open me-1"></i>${branch.room_count} rooms</span>
+              <span><i class="fas fa-check-circle me-1"></i>${branch.occupied_rooms} occupied</span>
+                             <span><i class="fas fa-peso-sign me-1"></i>${formatCurrency(branch.occupied_rent || 0)}</span>
+            </div>
+            <div class="branch-toggle" id="toggle-${branch.id}">
+              <i class="fas fa-chevron-down"></i>
+            </div>
+          </div>
+          <div class="rooms-container" id="rooms-${branch.id}">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <h6 class="mb-0">Rooms in ${branch.name}</h6>
+              <button class="btn btn-sm btn-success" onclick="showAddRoomModal(${branch.id})">
+                <i class="fas fa-plus me-1"></i>Add Room
+              </button>
+            </div>
+            <div id="rooms-list-${branch.id}">
+              <!-- Rooms will be loaded here -->
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    // Toggle branch expansion
+    async function toggleBranch(branchId) {
+      const roomsContainer = document.getElementById(`rooms-${branchId}`);
+      const toggle = document.getElementById(`toggle-${branchId}`);
+      
+      if (roomsContainer.classList.contains('show')) {
+        roomsContainer.classList.remove('show');
+        toggle.classList.remove('expanded');
+      } else {
+        // Load rooms for this branch
+        await loadBranchRooms(branchId);
+        roomsContainer.classList.add('show');
+        toggle.classList.add('expanded');
+      }
+    }
+
+    // Load rooms for a specific branch
+    async function loadBranchRooms(branchId) {
+      try {
+        const headers = getAuthHeaders();
+        const response = await fetch(`/api/branches/${branchId}/rooms`, { headers });
+        const data = await response.json();
+        
+        if (data.success) {
+          const roomsList = document.getElementById(`rooms-list-${branchId}`);
+          
+          if (data.branch.rooms.length === 0) {
+            roomsList.innerHTML = '<p class="text-muted text-center">No rooms in this branch</p>';
+          } else {
+            roomsList.innerHTML = data.branch.rooms.map(room => `
+              <div class="room-item">
+                <div class="room-info">
+                  <h6>Room ${room.room_number}</h6>
+                  <small>
+                    ${room.tenant_name ? `Tenant: ${room.tenant_name}` : 'No tenant'} | 
+                    Rent: ${formatCurrency(room.monthly_rent)}
+                  </small>
+                </div>
+                <div>
+                  <span class="badge bg-${room.status === 'occupied' ? 'primary' : (room.status === 'vacant' ? 'success' : 'warning')}">
+                    ${room.status}
+                  </span>
+                </div>
+              </div>
+            `).join('');
+          }
+        }
+      } catch (error) {
+        console.error('Error loading branch rooms:', error);
+      }
+    }
+
+    // Show add branch modal
+    function showAddBranchModal() {
+      document.getElementById('addBranchForm').reset();
+      new bootstrap.Modal(document.getElementById('addBranchModal')).show();
+    }
+
+    // Show add room modal
+    function showAddRoomModal(branchId = null) {
+      document.getElementById('addRoomForm').reset();
+      populateBranchSelect();
+      
+      if (branchId) {
+        document.getElementById('roomBranch').value = branchId;
+      }
+      
+      new bootstrap.Modal(document.getElementById('addRoomModal')).show();
+    }
+
+    // Populate branch select dropdown
+    function populateBranchSelect() {
+      const select = document.getElementById('roomBranch');
+      select.innerHTML = '<option value="">Select Branch</option>';
+      
+      branches.forEach(branch => {
+        select.innerHTML += `<option value="${branch.id}">${branch.name}</option>`;
+      });
+    }
+
+    // Add new branch
+    async function addBranch() {
+      try {
+        const name = document.getElementById('branchName').value.trim();
+        const description = document.getElementById('branchDescription').value.trim();
+        const address = document.getElementById('branchAddress').value.trim();
+
+        if (!name) {
+          alert('Branch name is required');
+          return;
+        }
+
+        const headers = getAuthHeaders();
+        const response = await fetch('/api/branches', {
+          method: 'POST',
+          headers: {
+            ...headers,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ name, description, address })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          bootstrap.Modal.getInstance(document.getElementById('addBranchModal')).hide();
+          await loadBranches();
+          showAlert('Branch added successfully!', 'success');
+        } else {
+          alert(data.message || 'Error adding branch');
+        }
+      } catch (error) {
+        console.error('Error adding branch:', error);
+        alert('Error adding branch');
+      }
+    }
+
+    // Add new room
+    async function addRoom() {
+      try {
+        const branch_id = document.getElementById('roomBranch').value;
+        const room_number = document.getElementById('roomNumber').value.trim();
+        const monthly_rent = parseFloat(document.getElementById('monthlyRent').value);
+        const status = document.getElementById('roomStatus').value;
+
+        if (!branch_id || !room_number || !monthly_rent) {
+          alert('Please fill in all required fields');
+          return;
+        }
+
+        const headers = getAuthHeaders();
+        const response = await fetch('/api/rooms', {
+          method: 'POST',
+          headers: {
+            ...headers,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({ room_number, branch_id, monthly_rent, status })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+          bootstrap.Modal.getInstance(document.getElementById('addRoomModal')).hide();
+          await loadBranches();
+          showAlert('Room added successfully!', 'success');
+        } else {
+          alert(data.message || 'Error adding room');
+        }
+      } catch (error) {
+        console.error('Error adding room:', error);
+        alert('Error adding room');
+      }
+    }
+
+    // Show alert
+    function showAlert(message, type = 'info') {
+      const alertDiv = document.createElement('div');
+      alertDiv.className = `alert alert-${type} alert-dismissible fade show position-fixed`;
+      alertDiv.style.top = '20px';
+      alertDiv.style.right = '20px';
+      alertDiv.style.zIndex = '9999';
+      alertDiv.innerHTML = `
+        ${message}
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+      `;
+      document.body.appendChild(alertDiv);
+
+      setTimeout(() => {
+        if (alertDiv.parentNode) {
+          alertDiv.parentNode.removeChild(alertDiv);
+        }
+      }, 5000);
+    }
+  </script>
+</body>
+</html> 

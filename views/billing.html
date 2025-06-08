@@ -1,0 +1,2025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Billing - J&H Apartment Management</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link href="/css/style.css" rel="stylesheet">
+</head>
+<body>
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <h3 class="sidebar-brand">J&H Apartment</h3>
+    </div>
+    <ul class="sidebar-menu">
+      <li><a href="/dashboard"><i class="fas fa-tachometer-alt"></i> Dashboard</a></li>
+      <li><a href="/tenants"><i class="fas fa-users"></i> Tenants</a></li>
+      <li><a href="/rooms"><i class="fas fa-door-open"></i> Rooms</a></li>
+      <li><a href="/billing" class="active"><i class="fas fa-file-invoice-dollar"></i> Billing</a></li>
+      <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i> Logout</a></li>
+    </ul>
+  </div>
+
+  <!-- Main Content -->
+  <div class="content">
+    <div class="container-fluid">
+      <!-- Alert Container for Notifications -->
+      <div id="alertContainer"></div>
+      
+      <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">Billing</h2>
+        <div class="d-flex align-items-center">
+          <span class="me-3" id="usernameDisplay"></span>
+          <div class="btn-group">
+            <button class="btn btn-outline-secondary" onclick="refreshData()">
+              <i class="fas fa-sync-alt"></i> Refresh
+            </button>
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#settingsModal">
+              <i class="fas fa-cog"></i> Settings
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Bills Section -->
+      <div class="row">
+        <div class="col-12">
+          <h4 class="mb-3">Pending Bills</h4>
+          <div class="row" id="pendingBillsContainer">
+            <!-- Pending bills cards will be populated here -->
+              </div>
+            </div>
+      </div>
+
+      <!-- Pending Payments Section -->
+      <div class="row mt-4">
+        <div class="col-12">
+          <h4 class="mb-3">Pending Payments</h4>
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                  <th>Name</th>
+                      <th>Room</th>
+                  <th>Billing Date</th>
+                  <th>Billing Period</th>
+                  <th>Electricity</th>
+                  <th>Water</th>
+                  <th>Rent + Fees</th>
+                  <th>Total Due</th>
+                  <th>Payment Mode</th>
+                      <th>Status</th>
+                  <th>Action</th>
+                    </tr>
+                  </thead>
+              <tbody id="activeBillsTable">
+                <!-- Active bills will be populated here -->
+                  </tbody>
+                </table>
+            </div>
+          </div>
+        </div>
+
+      <!-- Payment History Section -->
+      <div class="row mt-4">
+        <div class="col-12">
+          <h4 class="mb-3">Payment History</h4>
+              <div class="table-responsive">
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                  <th>Name</th>
+                      <th>Room</th>
+                  <th>Billing Date</th>
+                  <th>Billing Period</th>
+                  <th>Electricity</th>
+                  <th>Water</th>
+                  <th>Rent + Fees</th>
+                  <th>Total Amount</th>
+                  <th>Paid Date</th>
+                  <th>Status</th>
+                  <th>Action</th>
+                    </tr>
+                  </thead>
+              <tbody id="paidBillsTable">
+                <!-- Paid bills will be populated here -->
+                  </tbody>
+                </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Bill Modal -->
+  <div class="modal fade" id="createBillModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Create Bill</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Billing Statement -->
+          <div class="text-center mb-4">
+            <h4>BILLING STATEMENT</h4>
+            <h5>J&H APARTMENT</h5>
+            <p class="mb-0">P3, Patin-ay, Prosperidad, Agusan Del Sur</p>
+            <hr>
+            <div class="row">
+              <div class="col-md-4">
+                <p><strong>Room <span id="billRoom"></span></strong></p>
+            </div>
+              <div class="col-md-4">
+                <p><strong>Billing Date: <span id="billingDate"></span></strong></p>
+            </div>
+              <div class="col-md-4">
+                <p><strong>Billing Period: <span id="billingPeriod"></span></strong></p>
+            </div>
+              </div>
+            </div>
+
+          <form id="createBillForm">
+            <input type="hidden" id="tenantId">
+            <input type="hidden" id="roomId">
+            
+            <!-- Electric Section -->
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <h6 class="bg-warning text-dark p-2">Electric</h6>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Present Reading</label>
+                    <input type="number" class="form-control" id="presentReading" step="0.01" required>
+            </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" id="presentReadingDate" required>
+            </div>
+        </div>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Previous Reading</label>
+                    <input type="number" class="form-control" id="previousReading" step="0.01" readonly>
+        </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="date" class="form-control" id="previousReadingDate" readonly>
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Consumption</label>
+                    <input type="number" class="form-control" id="consumption" step="0.01" readonly>
+                  </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Amount</label>
+                    <div class="input-group">
+                      <span class="input-group-text">PHP</span>
+                      <input type="number" class="form-control" id="electricAmount" step="0.01" readonly>
+                    </div>
+      </div>
+    </div>
+  </div>
+
+              <!-- Water Section -->
+              <div class="col-md-6">
+                <h6 class="bg-info text-white p-2">Water</h6>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Present Reading</label>
+                    <input type="text" class="form-control" value="--" readonly>
+        </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="text" class="form-control" value="--" readonly>
+                  </div>
+                </div>
+            <div class="row">
+              <div class="col-md-6 mb-3">
+                    <label class="form-label">Previous Reading</label>
+                    <input type="text" class="form-control" value="--" readonly>
+              </div>
+              <div class="col-md-6 mb-3">
+                    <label class="form-label">Date</label>
+                    <input type="text" class="form-control" value="--" readonly>
+              </div>
+            </div>
+                <div class="row">
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Consumption</label>
+                    <input type="text" class="form-control" value="--" readonly>
+            </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Amount</label>
+                    <div class="input-group">
+                      <span class="input-group-text">PHP</span>
+                      <input type="number" class="form-control" id="waterAmount" readonly>
+        </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+            <!-- Rent Section -->
+            <div class="row mb-4">
+              <div class="col-md-12">
+                <h6 class="bg-primary text-white p-2">Rent - Billing Period</h6>
+            <div class="row">
+                  <div class="col-md-3 mb-3">
+                    <label class="form-label">Period Start Date</label>
+                    <input type="date" class="form-control" id="rentFrom" required>
+              </div>
+                  <div class="col-md-3 mb-3">
+                    <label class="form-label">Period End Date</label>
+                    <input type="date" class="form-control" id="rentTo" required>
+              </div>
+                  <div class="col-md-6 mb-3">
+                    <label class="form-label">Monthly Rent Amount</label>
+                    <div class="input-group">
+                      <span class="input-group-text">PHP</span>
+                      <input type="number" class="form-control" id="rentAmount" step="0.01" readonly>
+            </div>
+          </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Extra Fees Section -->
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <label class="form-label">Extra Fees:</label>
+              <div class="input-group">
+                  <span class="input-group-text">PHP</span>
+                  <input type="number" class="form-control" id="extraFeesAmount" step="0.01" placeholder="450">
+              </div>
+            </div>
+              <div class="col-md-6">
+                <label class="form-label">Description:</label>
+                <input type="text" class="form-control" id="extraFeesDescription" placeholder="e.g., Maintenance Fee">
+            </div>
+            </div>
+
+
+
+            <!-- Total Amount -->
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <h5><strong>Total Amount Due:</strong></h5>
+                <div class="input-group">
+                  <span class="input-group-text">PHP</span>
+                  <input type="number" class="form-control" id="totalAmount" step="0.01" readonly>
+                </div>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success" id="sendToTenant">
+            <i class="fas fa-paper-plane me-2"></i>Send to Tenant
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Payment Modal -->
+  <div class="modal fade" id="paymentModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Complete Payment</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <form id="paymentForm">
+            <input type="hidden" id="paymentBillId">
+            
+            <!-- Bill Breakdown Display -->
+            <div class="mb-4" id="billBreakdown">
+              <h6>Bill Breakdown</h6>
+              <div class="row" id="billBreakdownContent">
+                <!-- Will be populated dynamically -->
+              </div>
+            </div>
+            
+            <!-- Payment Options Section -->
+            <div class="mb-3">
+              <label class="form-label">Payment Options</label>
+              
+              <!-- Payment Type Selection -->
+              <div class="border rounded p-3 mb-3">
+                <h6 class="mb-3">Choose Payment Type:</h6>
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="paymentType" id="regularPayment" value="regular" checked>
+                      <label class="form-check-label" for="regularPayment">
+                        <strong><i class="fas fa-money-bill-wave text-success"></i> Regular Payment</strong>
+                        <br><small class="text-muted">Pay entire bill with one payment method</small>
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio" name="paymentType" id="useDeposits" value="deposits">
+                      <label class="form-check-label" for="useDeposits">
+                        <strong><i class="fas fa-university text-primary"></i> Use Deposits</strong>
+                        <br><small class="text-muted">Use advance payment and/or security deposit</small>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Regular Payment Section -->
+              <div class="border rounded p-3 mb-3" id="regularPaymentSection">
+                <h6 class="mb-3"><i class="fas fa-money-bill-wave text-success"></i> Regular Payment Method</h6>
+                
+
+                
+                <!-- Total and Payment Method -->
+                <div class="mb-3">
+                  <label class="form-label">Total Bill Amount:</label>
+                  <div class="input-group mb-3">
+                <span class="input-group-text">₱</span>
+                    <input type="number" class="form-control fw-bold" id="totalBillAmount" readonly>
+            </div>
+            </div>
+                
+            <div class="mb-3">
+                  <label class="form-label">Payment Amount:</label>
+                  <div class="input-group">
+                    <span class="input-group-text">₱</span>
+                    <input type="number" class="form-control" id="regularPaymentAmount" step="0.01" placeholder="0.00">
+          </div>
+                  <small class="text-muted">Can be edited for partial payment</small>
+                </div>
+                
+            <div class="mb-3">
+                  <label class="form-label">Payment Method:</label>
+                  <select class="form-select" id="entireBillPaymentMethod">
+                    <option value="">Select payment method</option>
+                <option value="cash">Cash</option>
+                <option value="bank_transfer">Bank Transfer</option>
+                <option value="check">Check</option>
+                <option value="other">Other</option>
+              </select>
+          </div>
+              </div>
+
+              <!-- Deposits Payment Section -->
+              <div id="depositsPaymentSection" style="display: none;">
+                
+                <!-- Advance Payment Option -->
+                <div class="border rounded p-3 mb-3" id="advancePaymentSection">
+                  <h6 class="mb-3"><i class="fas fa-calendar-plus text-success"></i> Advance Payment Option</h6>
+                  <div class="alert alert-info mb-3">
+                    <small><i class="fas fa-info-circle"></i> Advance payment can only be used for monthly rent and is typically used once.</small>
+                  </div>
+                  
+                  <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="useAdvancePayment">
+                    <label class="form-check-label" for="useAdvancePayment">
+                      <strong>Use Advance Payment for Rent (₱<span id="rentAmountForAdvance">0.00</span>)</strong>
+                      <br><small class="text-muted">Available: <span id="advancePaymentAvailable">₱0.00</span></small>
+                    </label>
+                  </div>
+                </div>
+
+                <!-- Security Deposit Option -->
+                <div class="border rounded p-3 mb-3" id="securityDepositSection">
+                  <h6 class="mb-3"><i class="fas fa-shield-alt text-warning"></i> Security Deposit Option</h6>
+                  <div class="alert alert-warning mb-3">
+                    <small><i class="fas fa-exclamation-triangle"></i> Security deposit can be used for utilities and extra fees. If the amount exceeds available deposit, it will make partial payment.</small>
+                  </div>
+                  
+                  <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" id="useSecurityDeposit">
+                    <label class="form-check-label" for="useSecurityDeposit">
+                      <strong>Use Security Deposit for Utilities & Extra Fees</strong>
+                      <br><small class="text-muted">Available: <span id="securityDepositAvailable">₱0.00</span></small>
+                    </label>
+                  </div>
+
+                  <div id="securityDepositOptions" style="display: none;">
+                    <div class="row mb-3">
+                      <div class="col-md-6">
+                        <label class="form-label">Total Utilities & Extra Fees:</label>
+                        <div class="input-group">
+                          <span class="input-group-text">₱</span>
+                          <input type="number" class="form-control" id="totalUtilitiesAmount" readonly>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Security Deposit Will Pay:</label>
+                        <div class="input-group">
+                          <span class="input-group-text">₱</span>
+                          <input type="number" class="form-control" id="securityDepositPayAmount" readonly>
+                        </div>
+                      </div>
+                    </div>
+                    <div id="partialPaymentWarning" class="alert alert-warning" style="display: none;">
+                      <i class="fas fa-exclamation-triangle"></i>
+                      <strong>Partial Payment:</strong> Security deposit will cover <span id="partialCoverage">₱0.00</span>. 
+                      Remaining <span id="partialRemaining">₱0.00</span> will need to be paid with other methods.
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Remaining Amount Payment -->
+                <div class="border rounded p-3 mb-3" id="remainingPaymentSection" style="display: none;">
+                  <h6 class="mb-3"><i class="fas fa-credit-card text-info"></i> Remaining Amount Payment</h6>
+                  <div class="row">
+                    <div class="col-md-6">
+                      <label class="form-label">Remaining Amount to Pay:</label>
+                      <div class="input-group">
+                        <span class="input-group-text">₱</span>
+                        <input type="number" class="form-control fw-bold text-danger" id="remainingAmountToPay" readonly>
+                      </div>
+                    </div>
+                    <div class="col-md-6">
+                      <label class="form-label">Payment Method for Remaining:</label>
+                      <select class="form-select" id="remainingPaymentMethod">
+                        <option value="">Select payment method</option>
+                        <option value="cash">Cash</option>
+                        <option value="bank_transfer">Bank Transfer</option>
+                        <option value="check">Check</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+
+            </div>
+
+            <!-- Payment Date -->
+            <div class="mb-3">
+              <label for="paymentDate" class="form-label">Payment Date</label>
+              <input type="date" class="form-control" id="paymentDate" required>
+            </div>
+          
+            <!-- Deposit Balance Display -->
+            <div id="depositBalanceInfo" class="mb-3" style="display: none;">
+              <div class="alert alert-info" id="depositBalanceAlert">
+                <h6><i class="fas fa-info-circle"></i> Available Deposits</h6>
+                <div id="depositBalanceDetails"></div>
+              </div>
+            </div>
+
+            <!-- Payment Notes -->
+            <div class="mb-3">
+              <label for="paymentNotes" class="form-label">Payment Notes</label>
+              <textarea class="form-control" id="paymentNotes" rows="3" placeholder="Optional notes about this payment..."></textarea>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" id="savePayment">Save Payment</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="/js/auth.js"></script>
+  <script>
+    // Global variables
+    let createBillModal;
+    let paymentModal;
+    let currentRates = {
+      electric_rate_per_kwh: 12.00,
+      water_fixed_amount: 200.00
+    };
+
+    // Enhanced authentication check
+    function checkAuth() {
+      if (!isAuthenticated()) {
+        window.location.href = '/login';
+        return false;
+      }
+      return true;
+    }
+
+    function handleApiError(error, container) {
+      console.error('API Error:', error);
+      showError('An error occurred. Please try again.', container);
+    }
+
+    function showSuccess(message, container) {
+      const alert = `
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      `;
+      container.innerHTML = alert;
+      setTimeout(() => {
+        const alertElement = container.querySelector('.alert');
+        if (alertElement) {
+          alertElement.remove();
+        }
+      }, 5000);
+    }
+
+    function showError(message, container) {
+      const alert = `
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+          ${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      `;
+      container.innerHTML = alert;
+    }
+
+    function showWarning(message, container) {
+      const alert = `
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+          <i class="fas fa-exclamation-triangle me-2"></i>${message}
+          <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        </div>
+      `;
+      container.innerHTML = alert;
+      setTimeout(() => {
+        const alertElement = container.querySelector('.alert');
+        if (alertElement) {
+          alertElement.remove();
+        }
+      }, 7000);
+    }
+
+    // Display username
+    function displayUsername() {
+      const user = getCurrentUser();
+      if (user) {
+        document.getElementById('usernameDisplay').textContent = user.username || 'User';
+      } else {
+        const token = getToken();
+      if (token) {
+        try {
+          // Decode JWT token to get user info
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          document.getElementById('usernameDisplay').textContent = payload.username || 'User';
+        } catch (error) {
+          document.getElementById('usernameDisplay').textContent = 'User';
+          }
+        }
+      }
+    }
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      // Check authentication first
+      if (!checkAuth()) {
+        return;
+      }
+      
+      // Display username
+      displayUsername();
+      
+      // Initialize modals
+      createBillModal = new bootstrap.Modal(document.getElementById('createBillModal'));
+      paymentModal = new bootstrap.Modal(document.getElementById('paymentModal'));
+      
+      // Event listeners
+      document.getElementById('sendToTenant').addEventListener('click', sendBillToTenant);
+      document.getElementById('savePayment').addEventListener('click', savePayment);
+      document.getElementById('presentReading').addEventListener('input', calculateElectric);
+      document.getElementById('extraFeesAmount').addEventListener('input', calculateTotal);
+      
+      // Logout functionality
+      document.getElementById('logoutBtn').addEventListener('click', (e) => {
+        e.preventDefault();
+        logout();
+      });
+      
+      // Load initial data
+      loadBillingRates();
+      loadPendingBills();
+      loadActiveBills();
+      loadPaidBills();
+    });
+
+    // Load billing rates
+    async function loadBillingRates() {
+      try {
+        const response = await fetch('/api/settings/billing-rates', {
+          headers: getAuthHeaders()
+        });
+        
+        // Check if response is HTML (login page) instead of JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+          console.error('Received HTML instead of JSON - user not authenticated');
+          showError('Please log in to access the billing page.', document.getElementById('alertContainer'));
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 2000);
+          return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          currentRates = data.rates;
+        } else {
+          console.error('Failed to load billing rates:', data.message);
+        }
+      } catch (error) {
+        console.error('Error loading billing rates:', error);
+      }
+    }
+    
+    // Load pending bills (rooms that need billing)
+    async function loadPendingBills() {
+      try {
+        const response = await fetch('/api/bills/pending-rooms', {
+          headers: getAuthHeaders()
+        });
+        
+        // Check if response is HTML (login page) instead of JSON
+        const contentType = response.headers.get('content-type');
+        if (contentType && contentType.includes('text/html')) {
+          console.error('Received HTML instead of JSON - user not authenticated');
+          showError('Please log in to access the billing page.', document.getElementById('alertContainer'));
+          setTimeout(() => {
+            window.location.href = '/login';
+          }, 2000);
+          return;
+        }
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          renderPendingBills(data.rooms);
+        } else {
+          console.error('API response not successful:', data);
+          showError(data.message || 'Failed to load room data', document.getElementById('alertContainer'));
+        }
+      } catch (error) {
+        console.error('Error loading pending bills:', error);
+        handleApiError(error, document.getElementById('alertContainer'));
+      }
+    }
+    
+    // Render pending bills cards
+    function renderPendingBills(rooms) {
+      const container = document.getElementById('pendingBillsContainer');
+      
+      if (rooms.length === 0) {
+        container.innerHTML = '<div class="col-12"><div class="alert alert-info">No rooms available.</div></div>';
+        return;
+      }
+
+      container.innerHTML = rooms.map(room => {
+        let badgeText, nameDisplay, buttonHtml, previousReading;
+        
+        switch (room.billing_status) {
+          case 'no_tenant':
+            badgeText = 'No tenant';
+            nameDisplay = 'Unknown';
+            previousReading = '-';
+            buttonHtml = '<button class="btn btn-info btn-sm" disabled>No Tenant</button>';
+            break;
+            
+          case 'already_billed':
+            badgeText = 'Bill pending';
+            nameDisplay = room.tenant_name || 'Unknown';
+            previousReading = room.previous_reading || '0';
+            buttonHtml = '<button class="btn btn-warning btn-sm" disabled>Bill Sent</button>';
+            break;
+            
+          case 'needs_billing':
+            badgeText = 'Need billing';
+            nameDisplay = room.tenant_name || 'Unknown';
+            previousReading = room.previous_reading || '0';
+            buttonHtml = `<button class="btn btn-success btn-sm" onclick="openCreateBillModal(${room.tenant_id}, ${room.room_id}, '${room.room_number}', '${room.tenant_name}', ${room.monthly_rent}, '${room.previous_reading || 0}', '${room.previous_reading_date || room.rent_start}', '${room.next_period_start}', '${room.next_period_end}')">Create Bill</button>`;
+            break;
+        }
+        
+        // Determine card styling based on status
+        let cardClass = '';
+        let badgeClass = '';
+        
+        switch (room.billing_status) {
+          case 'no_tenant':
+            cardClass = 'border-secondary';
+            badgeClass = 'bg-secondary';
+            break;
+          case 'already_billed':
+            cardClass = 'border-warning';
+            badgeClass = 'bg-warning';
+            break;
+          case 'needs_billing':
+            cardClass = 'border-success';
+            badgeClass = 'bg-success';
+            break;
+        }
+        
+        return `
+          <div class="col-md-3 mb-3">
+            <div class="card ${cardClass}" style="border-width: 2px;">
+              <div class="card-header" style="background: #f8f9fa; padding: 10px 15px; border-bottom: 1px solid #ddd; position: relative;">
+                <span class="badge ${badgeClass} position-absolute" style="top: 5px; right: 5px; font-size: 10px;">${badgeText}</span>
+                <h6 class="mb-0" style="color: #666;">Room ${room.room_number}</h6>
+              </div>
+              <div class="card-body" style="padding: 15px;">
+                <p class="mb-2"><strong>Name:</strong> ${nameDisplay}</p>
+                <p class="mb-2"><strong>Previous Reading:</strong> ${previousReading}</p>
+                <p class="mb-2"><strong>Last Reading Date:</strong> ${room.previous_reading_date ? formatDate(room.previous_reading_date) : '-'}</p>
+                ${room.billing_status === 'needs_billing' ? `<p class="mb-3"><strong>Next Period:</strong> ${formatDate(room.next_period_start)} - ${formatDate(room.next_period_end)}</p>` : '<p class="mb-3"></p>'}
+                ${buttonHtml}
+              </div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Load active bills (unpaid/partial)
+    async function loadActiveBills() {
+      try {
+        const response = await fetch('/api/bills/active', {
+          headers: getAuthHeaders()
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          renderActiveBills(data.bills);
+        }
+      } catch (error) {
+        handleApiError(error, document.getElementById('alertContainer'));
+      }
+    }
+    
+    // Load paid bills (archived)
+    async function loadPaidBills() {
+      try {
+        const response = await fetch('/api/bills/paid', {
+          headers: getAuthHeaders()
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          renderPaidBills(data.bills);
+        }
+      } catch (error) {
+        handleApiError(error, document.getElementById('alertContainer'));
+      }
+    }
+    
+    // Render active bills table
+    function renderActiveBills(bills) {
+      const tbody = document.getElementById('activeBillsTable');
+      
+      if (bills.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center">No active bills</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = bills.map(bill => {
+        const rentAndFees = parseFloat(bill.rent_amount) + parseFloat(bill.extra_fee_amount || 0);
+        return `
+          <tr>
+            <td>${bill.tenant_name}</td>
+            <td>${bill.room_number}</td>
+            <td>${formatDate(bill.bill_date)}</td>
+            <td>${formatDate(bill.rent_from)} - ${formatDate(bill.rent_to)}</td>
+            <td>${formatCurrency(bill.electric_amount)}</td>
+            <td>${formatCurrency(bill.water_amount)}</td>
+            <td>${formatCurrency(rentAndFees)}</td>
+            <td>${formatCurrency(bill.total_amount)}</td>
+            <td>-</td>
+            <td><span class="badge ${getStatusBadgeClass(bill.status)}">${bill.status.toUpperCase()}</span></td>
+            <td>
+              <button class="btn btn-success btn-sm" onclick="openPaymentModal(${bill.id}, ${bill.total_amount})">
+                Complete Payment
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Render paid bills table
+    function renderPaidBills(bills) {
+      const tbody = document.getElementById('paidBillsTable');
+      
+      if (bills.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" class="text-center">No payment history</td></tr>';
+        return;
+      }
+      
+      tbody.innerHTML = bills.map(bill => {
+        const rentAndFees = parseFloat(bill.rent_amount) + parseFloat(bill.extra_fee_amount || 0);
+        return `
+          <tr>
+            <td>${bill.tenant_name}</td>
+            <td>${bill.room_number}</td>
+            <td>${formatDate(bill.bill_date)}</td>
+            <td>${formatDate(bill.rent_from)} - ${formatDate(bill.rent_to)}</td>
+            <td>${formatCurrency(bill.electric_amount)}</td>
+            <td>${formatCurrency(bill.water_amount)}</td>
+            <td>${formatCurrency(rentAndFees)}</td>
+            <td>${formatCurrency(bill.total_amount)}</td>
+            <td>${bill.paid_date ? formatDate(bill.paid_date) : '-'}</td>
+            <td><span class="badge bg-success">PAID</span></td>
+            <td>
+              <button class="btn btn-outline-secondary btn-sm me-1" onclick="viewBillDetails(${bill.id})">
+                View Details
+              </button>
+              <button class="btn btn-success btn-sm" onclick="downloadReceipt(${bill.id})">
+                Download Receipt
+              </button>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Helper function to format date for HTML date input (YYYY-MM-DD)
+    function formatDateForInput(dateString) {
+      if (!dateString) return '';
+      
+      // Handle timezone issues by treating the date as local time
+      let date;
+      if (typeof dateString === 'string' && dateString.includes('T')) {
+        // If it's already an ISO string, parse it directly
+        date = new Date(dateString);
+      } else {
+        // If it's a date-only string (YYYY-MM-DD), parse as local time
+        const parts = dateString.toString().split('T')[0].split('-');
+        date = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      }
+      
+      // Format as YYYY-MM-DD in local timezone
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      
+      return `${year}-${month}-${day}`;
+    }
+
+    // Open create bill modal
+    function openCreateBillModal(tenantId, roomId, roomNumber, tenantName, monthlyRent, previousReading, previousReadingDate, nextPeriodStart, nextPeriodEnd) {
+      console.log('Modal data:', { nextPeriodStart, nextPeriodEnd }); // Debug log
+      
+      // Set basic info
+      document.getElementById('tenantId').value = tenantId;
+      document.getElementById('roomId').value = roomId;
+      document.getElementById('billRoom').textContent = roomNumber;
+      document.getElementById('billingDate').textContent = formatDate(new Date());
+      
+      // Set rent details - automatically calculated billing period
+      const formattedStartDate = formatDateForInput(nextPeriodStart);
+      const formattedEndDate = formatDateForInput(nextPeriodEnd);
+      
+      document.getElementById('rentFrom').value = formattedStartDate;
+      document.getElementById('rentTo').value = formattedEndDate;
+      document.getElementById('rentAmount').value = monthlyRent;
+      
+      // Display billing period prominently in header (use same dates as form inputs)
+      document.getElementById('billingPeriod').textContent = `${formatDate(formattedStartDate)} - ${formatDate(formattedEndDate)}`;
+      
+      // Set previous electric reading
+      document.getElementById('previousReading').value = previousReading || 0;
+      document.getElementById('previousReadingDate').value = formatDateForInput(previousReadingDate) || formattedStartDate;
+      
+      // Set today's date for present reading
+      document.getElementById('presentReadingDate').valueAsDate = new Date();
+      
+      // Set water amount
+      document.getElementById('waterAmount').value = currentRates.water_fixed_amount;
+      
+      // Clear form
+      document.getElementById('presentReading').value = '';
+      document.getElementById('consumption').value = '';
+      document.getElementById('electricAmount').value = '';
+      document.getElementById('extraFeesAmount').value = '0';
+      document.getElementById('extraFeesDescription').value = '';
+      
+      // Calculate initial total
+      calculateTotal();
+      
+      createBillModal.show();
+    }
+
+    // Calculate electric consumption and amount
+    function calculateElectric() {
+      const present = parseFloat(document.getElementById('presentReading').value) || 0;
+      const previous = parseFloat(document.getElementById('previousReading').value) || 0;
+      
+      if (present >= previous) {
+        const consumption = present - previous;
+        const amount = consumption * currentRates.electric_rate_per_kwh;
+        
+        document.getElementById('consumption').value = consumption.toFixed(2);
+        document.getElementById('electricAmount').value = amount.toFixed(2);
+        
+        calculateTotal();
+      }
+    }
+
+    // Calculate total amount
+    function calculateTotal() {
+      const rent = parseFloat(document.getElementById('rentAmount').value) || 0;
+      const electric = parseFloat(document.getElementById('electricAmount').value) || 0;
+      const water = parseFloat(document.getElementById('waterAmount').value) || 0;
+      const extraFees = parseFloat(document.getElementById('extraFeesAmount').value) || 0;
+      
+      const total = rent + electric + water + extraFees;
+      document.getElementById('totalAmount').value = total.toFixed(2);
+    }
+
+    // Prevent multiple rapid clicks
+    let isCreatingBill = false;
+
+    // Send bill to tenant
+    async function sendBillToTenant() {
+      // Prevent multiple rapid clicks
+      if (isCreatingBill) {
+        console.log('Bill creation already in progress...');
+        return;
+      }
+      
+      isCreatingBill = true;
+      
+      // Disable the button to prevent multiple clicks
+      const sendButton = document.getElementById('sendToTenant');
+      const originalText = sendButton.textContent;
+      sendButton.disabled = true;
+      sendButton.textContent = 'Creating Bill...';
+      const formData = {
+        tenant_id: document.getElementById('tenantId').value,
+        room_id: document.getElementById('roomId').value,
+        bill_date: new Date().toISOString().split('T')[0],
+        rent_from: document.getElementById('rentFrom').value,
+        rent_to: document.getElementById('rentTo').value,
+        rent_amount: document.getElementById('rentAmount').value,
+        electric_present_reading: document.getElementById('presentReading').value,
+        electric_previous_reading: document.getElementById('previousReading').value,
+        electric_consumption: document.getElementById('consumption').value,
+        electric_amount: document.getElementById('electricAmount').value,
+        electric_reading_date: document.getElementById('presentReadingDate').value,
+        electric_previous_date: document.getElementById('previousReadingDate').value,
+        water_amount: document.getElementById('waterAmount').value,
+        extra_fee_amount: document.getElementById('extraFeesAmount').value || 0,
+        extra_fee_description: document.getElementById('extraFeesDescription').value || null,
+        total_amount: document.getElementById('totalAmount').value,
+        status: 'unpaid',
+        prepared_by: 'Admin'
+      };
+
+      if (!formData.electric_present_reading) {
+        alert('Please enter the present electricity reading');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/bills', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Close modal immediately for better UX
+          createBillModal.hide();
+          
+          const message = data.emailMessage || 'Bill created successfully';
+            showSuccess(message, document.getElementById('alertContainer'));
+          
+          // Refresh data in background
+          setTimeout(() => {
+          loadPendingBills();
+          loadActiveBills();
+          loadPaidBills();
+          }, 100);
+          } else {
+          alert(data.message || 'Error creating bill');
+          }
+        } catch (error) {
+          handleApiError(error, document.getElementById('alertContainer'));
+      } finally {
+        // Re-enable the button and reset state
+        isCreatingBill = false;
+        sendButton.disabled = false;
+        sendButton.textContent = originalText;
+      }
+    }
+
+    // Open payment modal
+    async function openPaymentModal(billId, amount) {
+      document.getElementById('paymentBillId').value = billId;
+      document.getElementById('paymentDate').valueAsDate = new Date();
+      
+      // Load bill details and setup payment options
+      await loadBillForPayment(billId);
+      
+      // Load tenant deposit balance for this bill
+      await loadTenantDepositBalance(billId);
+      
+      // Setup event listeners for payment method changes
+      setupPaymentMethodListeners();
+      
+      paymentModal.show();
+    }
+
+    // Load bill details for payment
+    async function loadBillForPayment(billId) {
+      try {
+        const response = await fetch(`/api/bills/${billId}`, {
+          headers: getAuthHeaders()
+        });
+        
+        const data = await response.json();
+        if (!data.success) {
+          alert('Error loading bill details');
+          return;
+        }
+        
+        const bill = data.bill;
+        window.currentBill = bill; // Store for later use
+        
+        // Calculate amounts separately
+        const rentAmount = parseFloat(bill.rent_amount);
+        const extraFeesAmount = parseFloat(bill.extra_fee_amount || 0);
+        const electricAmount = parseFloat(bill.electric_amount || 0);
+        const waterAmount = parseFloat(bill.water_amount || 0);
+        const totalAmount = rentAmount + extraFeesAmount + electricAmount + waterAmount;
+        
+        // Update bill display in regular payment section
+        document.getElementById('totalBillAmount').value = totalAmount.toFixed(2);
+        
+        // Auto-fill payment amount to total bill amount
+        document.getElementById('regularPaymentAmount').value = totalAmount.toFixed(2);
+        
+        // Update advance payment section
+        document.getElementById('rentAmountForAdvance').textContent = rentAmount.toFixed(2);
+        
+        // Store original amounts
+        window.billAmounts = {
+          rent: rentAmount,
+          extraFees: extraFeesAmount,
+          electric: electricAmount,
+          water: waterAmount,
+          total: totalAmount
+        };
+        
+        // Reset to regular payment mode
+        document.getElementById('regularPayment').checked = true;
+        document.getElementById('regularPaymentSection').style.display = 'block';
+        document.getElementById('depositsPaymentSection').style.display = 'none';
+        
+        // Reset all form fields
+        document.getElementById('entireBillPaymentMethod').value = '';
+        document.getElementById('useAdvancePayment').checked = false;
+        document.getElementById('useSecurityDeposit').checked = false;
+        document.getElementById('remainingPaymentMethod').value = '';
+        
+        // Update payment display
+        updatePaymentDisplay();
+        
+      } catch (error) {
+        console.error('Error loading bill for payment:', error);
+        alert('Error loading bill details');
+      }
+    }
+    
+    // Setup payment method listeners
+    function setupPaymentMethodListeners() {
+      // Payment type radio button listeners
+      document.getElementById('regularPayment').addEventListener('change', function() {
+        if (this.checked) {
+          document.getElementById('regularPaymentSection').style.display = 'block';
+          document.getElementById('depositsPaymentSection').style.display = 'none';
+          document.getElementById('remainingPaymentSection').style.display = 'none';
+          updatePaymentDisplay();
+        }
+      });
+      
+      document.getElementById('useDeposits').addEventListener('change', function() {
+        if (this.checked) {
+          document.getElementById('regularPaymentSection').style.display = 'none';
+          document.getElementById('depositsPaymentSection').style.display = 'block';
+          updatePaymentDisplay();
+        }
+      });
+      
+      // Regular payment method listener
+      document.getElementById('entireBillPaymentMethod').addEventListener('change', updatePaymentDisplay);
+      document.getElementById('regularPaymentAmount').addEventListener('input', updatePaymentDisplay);
+      document.getElementById('remainingPaymentMethod').addEventListener('change', updatePaymentDisplay);
+      
+      // Setup deposit option listeners
+      const advancePaymentCheckbox = document.getElementById('useAdvancePayment');
+      const securityDepositCheckbox = document.getElementById('useSecurityDeposit');
+      
+      if (advancePaymentCheckbox) {
+        advancePaymentCheckbox.addEventListener('change', handleAdvancePaymentChange);
+      }
+      
+      if (securityDepositCheckbox) {
+        securityDepositCheckbox.addEventListener('change', handleSecurityDepositChange);
+      }
+      
+      updatePaymentDisplay();
+    }
+    
+    // Handle payment method change
+    function handlePaymentMethodChange(event) {
+      updatePaymentDisplay();
+    }
+    
+    // Handle advance payment checkbox change
+    function handleAdvancePaymentChange() {
+      const isChecked = document.getElementById('useAdvancePayment').checked;
+      
+      if (isChecked) {
+        // Check if advance payment is available
+        if (!window.currentDepositBalance || window.currentDepositBalance.advance_payment.available <= 0) {
+          alert('No advance payment available!');
+          document.getElementById('useAdvancePayment').checked = false;
+          return;
+        }
+      }
+      
+      updatePaymentDisplay();
+    }
+    
+    // Handle security deposit checkbox change
+    function handleSecurityDepositChange() {
+      const isChecked = document.getElementById('useSecurityDeposit').checked;
+      const securityDepositOptions = document.getElementById('securityDepositOptions');
+      
+      if (isChecked) {
+        // Check if security deposit is available
+        if (!window.currentDepositBalance || window.currentDepositBalance.security_deposit.available <= 0) {
+          alert('No security deposit available!');
+          document.getElementById('useSecurityDeposit').checked = false;
+          return;
+        }
+        
+        securityDepositOptions.style.display = 'block';
+        
+
+      }
+      
+      updatePaymentDisplay();
+    }
+    
+    // Update payment display and calculations
+    function updatePaymentDisplay() {
+      if (!window.billAmounts) return;
+      
+      const isUsingDeposits = document.getElementById('useDeposits').checked;
+      
+      if (isUsingDeposits) {
+        // Load deposit balances if using deposits
+        if (window.currentDepositBalance) {
+          document.getElementById('advancePaymentAvailable').textContent = formatCurrency(window.currentDepositBalance.advance_payment.available);
+          document.getElementById('securityDepositAvailable').textContent = formatCurrency(window.currentDepositBalance.security_deposit.available);
+        }
+        
+        const useSecurityDeposit = document.getElementById('useSecurityDeposit').checked;
+        
+        // Calculate security deposit coverage
+        if (useSecurityDeposit) {
+          calculateSecurityDepositCoverage();
+        }
+        
+        // Update deposit balance display
+        updateDepositBalanceDisplay();
+      }
+      
+      // Update total payment amount
+      calculateTotalPaymentAmount();
+    }
+    
+    // Calculate security deposit coverage for utilities and extra fees
+    function calculateSecurityDepositCoverage() {
+      const extraFeesAmount = window.billAmounts.extraFees;
+      const electricAmount = window.billAmounts.electric;
+      const waterAmount = window.billAmounts.water;
+      
+      const totalUtilities = extraFeesAmount + electricAmount + waterAmount;
+      const availableSecurityDeposit = window.currentDepositBalance ? window.currentDepositBalance.security_deposit.available : 0;
+      
+      const securityDepositWillPay = Math.min(totalUtilities, availableSecurityDeposit);
+      const remainingAmount = Math.max(0, totalUtilities - availableSecurityDeposit);
+      
+      // Update display
+      document.getElementById('totalUtilitiesAmount').value = totalUtilities.toFixed(2);
+      document.getElementById('securityDepositPayAmount').value = securityDepositWillPay.toFixed(2);
+      
+      // Show partial payment warning if needed
+      const partialWarning = document.getElementById('partialPaymentWarning');
+      if (remainingAmount > 0) {
+        partialWarning.style.display = 'block';
+        document.getElementById('partialCoverage').textContent = formatCurrency(securityDepositWillPay);
+        document.getElementById('partialRemaining').textContent = formatCurrency(remainingAmount);
+      } else {
+        partialWarning.style.display = 'none';
+      }
+      
+      // Store calculated amounts
+      window.securityDepositCalculation = {
+        totalUtilities,
+        securityDepositWillPay,
+        remainingAmount
+      };
+    }
+    
+    // Calculate total payment amount
+    function calculateTotalPaymentAmount() {
+      if (!window.billAmounts) return;
+      
+      let totalPayment = 0;
+      let paymentBreakdown = [];
+      let remainingAmount = 0;
+      
+      const isRegularPayment = document.getElementById('regularPayment').checked;
+      const isUsingDeposits = document.getElementById('useDeposits').checked;
+      
+      if (isRegularPayment) {
+        // Regular payment: entire bill with one payment method
+        const paymentMethod = document.getElementById('entireBillPaymentMethod').value;
+        const paymentAmount = parseFloat(document.getElementById('regularPaymentAmount').value || 0);
+        
+        if (paymentMethod && paymentAmount > 0) {
+          totalPayment = paymentAmount;
+          const isPartialPayment = paymentAmount < window.billAmounts.total;
+          const paymentType = isPartialPayment ? 'Partial Payment' : 'Full Payment';
+          paymentBreakdown.push(`${paymentType}: ₱${totalPayment.toFixed(2)} (${paymentMethod})`);
+        }
+      } else if (isUsingDeposits) {
+        // Using deposits
+        const useAdvancePayment = document.getElementById('useAdvancePayment').checked;
+        const useSecurityDeposit = document.getElementById('useSecurityDeposit').checked;
+        
+        let totalBillAmount = window.billAmounts.total;
+        let amountCoveredByDeposits = 0;
+        
+        // Calculate advance payment coverage
+        if (useAdvancePayment) {
+          const availableAdvance = window.currentDepositBalance ? window.currentDepositBalance.advance_payment.available : 0;
+          const rentAmount = window.billAmounts.rent;
+          const advancePaymentAmount = Math.min(rentAmount, availableAdvance);
+          
+          if (advancePaymentAmount > 0) {
+            totalPayment += advancePaymentAmount;
+            amountCoveredByDeposits += advancePaymentAmount;
+            paymentBreakdown.push(`Rent: ₱${advancePaymentAmount.toFixed(2)} (Advance Payment)`);
+          }
+        }
+        
+        // Calculate security deposit coverage
+        if (useSecurityDeposit && window.securityDepositCalculation) {
+          const calc = window.securityDepositCalculation;
+          if (calc.securityDepositWillPay > 0) {
+            totalPayment += calc.securityDepositWillPay;
+            amountCoveredByDeposits += calc.securityDepositWillPay;
+            paymentBreakdown.push(`Utilities & Extra Fees: ₱${calc.securityDepositWillPay.toFixed(2)} (Security Deposit)`);
+          }
+        }
+        
+        // Calculate remaining amount
+        remainingAmount = totalBillAmount - amountCoveredByDeposits;
+        
+        // Show remaining payment section if there's remaining amount
+        const remainingPaymentSection = document.getElementById('remainingPaymentSection');
+        const remainingAmountInput = document.getElementById('remainingAmountToPay');
+        
+        if (remainingAmount > 0) {
+          remainingPaymentSection.style.display = 'block';
+          remainingAmountInput.value = remainingAmount.toFixed(2);
+          
+          // Check if remaining payment method is selected
+          const remainingMethod = document.getElementById('remainingPaymentMethod').value;
+          if (remainingMethod) {
+            totalPayment += remainingAmount;
+            paymentBreakdown.push(`Remaining Amount: ₱${remainingAmount.toFixed(2)} (${remainingMethod})`);
+          }
+        } else {
+          remainingPaymentSection.style.display = 'none';
+          remainingAmountInput.value = '0.00';
+        }
+      }
+      
+      // Note: Total payment amount display removed as per user request
+      
+      // Update save button state
+      updateSaveButtonState(totalPayment);
+    }
+    
+    // Update save button state
+    function updateSaveButtonState(totalPayment) {
+      const saveButton = document.getElementById('savePayment');
+      if (!saveButton) return;
+      
+      const isRegularPayment = document.getElementById('regularPayment').checked;
+      const isUsingDeposits = document.getElementById('useDeposits').checked;
+      
+      let hasValidPayments = false;
+      
+      if (isRegularPayment) {
+        const paymentMethod = document.getElementById('entireBillPaymentMethod').value;
+        const paymentAmount = parseFloat(document.getElementById('regularPaymentAmount').value || 0);
+        hasValidPayments = paymentMethod && paymentAmount > 0;
+      } else if (isUsingDeposits) {
+        hasValidPayments = totalPayment > 0;
+      }
+      
+      saveButton.disabled = !hasValidPayments;
+      saveButton.textContent = hasValidPayments ? 'Process Payment' : 'Select Payment Methods';
+    }
+    
+    // (Removed old validation functions - replaced with new separated deposit system)
+    
+    // Update deposit balance display
+    function updateDepositBalanceDisplay() {
+      if (!window.currentDepositBalance) return;
+      
+      const balance = window.currentDepositBalance;
+      const useAdvancePayment = document.getElementById('useAdvancePayment')?.checked || false;
+      const useSecurityDeposit = document.getElementById('useSecurityDeposit')?.checked || false;
+      
+      // Calculate usage
+      let advanceUsed = 0;
+      let securityUsed = 0;
+      
+      if (useAdvancePayment && window.billAmounts) {
+        advanceUsed = Math.min(window.billAmounts.rent, balance.advance_payment.available);
+      }
+      
+      if (useSecurityDeposit && window.securityDepositCalculation) {
+        securityUsed = window.securityDepositCalculation.securityDepositWillPay;
+      }
+      
+      const remainingAdvance = balance.advance_payment.available - advanceUsed;
+      const remainingSecurity = balance.security_deposit.available - securityUsed;
+      
+      // Show deposit info if any deposit is being used
+      const depositBalance = document.getElementById('depositBalanceInfo');
+      if (useAdvancePayment || useSecurityDeposit) {
+        depositBalance.style.display = 'block';
+        
+        const balanceHtml = `
+          <div class="row">
+            <div class="col-md-6">
+              <strong>Advance Payment:</strong><br>
+              <span class="text-success">Available: ₱${balance.advance_payment.available.toFixed(2)}</span><br>
+              ${advanceUsed > 0 ? `<span class="text-warning">Using: ₱${advanceUsed.toFixed(2)}</span><br>` : ''}
+              <span class="text-primary">Remaining: ₱${remainingAdvance.toFixed(2)}</span><br>
+              <small class="text-muted">Total: ₱${balance.advance_payment.total.toFixed(2)} | Previously Used: ₱${balance.advance_payment.used.toFixed(2)}</small><br>
+              <span class="badge ${balance.advance_payment.status === 'paid' ? 'bg-success' : 'bg-warning'}">${balance.advance_payment.status}</span>
+            </div>
+            <div class="col-md-6">
+              <strong>Security Deposit:</strong><br>
+              <span class="text-success">Available: ₱${balance.security_deposit.available.toFixed(2)}</span><br>
+              ${securityUsed > 0 ? `<span class="text-warning">Using: ₱${securityUsed.toFixed(2)}</span><br>` : ''}
+              <span class="text-primary">Remaining: ₱${remainingSecurity.toFixed(2)}</span><br>
+              <small class="text-muted">Total: ₱${balance.security_deposit.total.toFixed(2)} | Previously Used: ₱${balance.security_deposit.used.toFixed(2)}</small><br>
+              <span class="badge ${balance.security_deposit.status === 'paid' ? 'bg-success' : 'bg-warning'}">${balance.security_deposit.status}</span>
+            </div>
+          </div>
+        `;
+        
+        document.getElementById('depositBalanceDetails').innerHTML = balanceHtml;
+        
+        // Update alert color based on usage
+        const alertElement = document.getElementById('depositBalanceAlert');
+        if (alertElement) {
+          if (advanceUsed > 0 || securityUsed > 0) {
+            alertElement.className = 'alert alert-warning';
+          } else {
+            alertElement.className = 'alert alert-info';
+          }
+        }
+      } else {
+        depositBalance.style.display = 'none';
+      }
+    }
+    
+    // Helper function to trigger payment method change updates
+    function updatePaymentMethodChange() {
+      // Prevent recursive calls during validation
+      if (window.isValidating) return;
+      window.isValidating = true;
+      
+      updateDepositBalanceVisibility();
+      validatePaymentMethods();
+      updateTotalPaymentAmount();
+      
+      window.isValidating = false;
+    }
+    
+    // Update total payment amount
+    function updateTotalPaymentAmount() {
+      const rentAmount = parseFloat(document.getElementById('rentPaymentAmount').value) || 0;
+      const extraFeesAmount = parseFloat(document.getElementById('extraFeesPaymentAmount')?.value) || 0;
+      const electricAmount = parseFloat(document.getElementById('electricPaymentAmount').value) || 0;
+      const waterAmount = parseFloat(document.getElementById('waterPaymentAmount').value) || 0;
+      
+      const totalPayment = rentAmount + extraFeesAmount + electricAmount + waterAmount;
+      document.getElementById('totalPaymentAmount').textContent = formatCurrency(totalPayment);
+      
+      // Check if payment methods are selected for all amounts > 0
+      const rentMethod = document.getElementById('rentPaymentMethod').value;
+      const extraFeesMethod = document.getElementById('extraFeesPaymentMethod');
+      const electricMethod = document.getElementById('electricPaymentMethod').value;
+      const waterMethod = document.getElementById('waterPaymentMethod').value;
+      
+      let isValid = true;
+      if (rentAmount > 0 && !rentMethod) isValid = false;
+      if (extraFeesAmount > 0 && (!extraFeesMethod || !extraFeesMethod.value)) isValid = false;
+      if (electricAmount > 0 && !electricMethod) isValid = false;
+      if (waterAmount > 0 && !waterMethod) isValid = false;
+      
+      // Enable/disable save button based on validation
+      const saveButton = document.getElementById('savePayment');
+      if (saveButton) {
+        saveButton.disabled = !isValid;
+        saveButton.textContent = isValid ? 'Save Payment' : 'Select Payment Methods';
+      }
+    }
+    
+    // (Removed old validation functions - now handled in new separated deposit system)
+    
+    // Load tenant deposit balance for bill
+    async function loadTenantDepositBalance(billId) {
+      try {
+        // First get bill details to find tenant
+        const billResponse = await fetch(`/api/bills/${billId}`, {
+          headers: getAuthHeaders()
+        });
+        
+        const billData = await billResponse.json();
+        if (!billData.success) return;
+        
+        const tenantId = billData.bill.tenant_id;
+        
+        // Then get deposit balance
+        const response = await fetch(`/api/deposits/tenant/${tenantId}/balance`, {
+          headers: getAuthHeaders()
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          const balance = data.balance;
+          
+          // Store balance data for validation
+          window.currentDepositBalance = balance;
+          
+          // Initialize deposit balance display
+          updateDepositBalanceDisplay();
+        }
+      } catch (error) {
+        console.error('Error loading deposit balance:', error);
+      }
+    }
+
+    // Prevent multiple rapid payment submissions
+    let isProcessingPayment = false;
+
+    // Save payment with simplified system
+    async function savePayment() {
+      // Prevent multiple rapid clicks
+      if (isProcessingPayment) {
+        console.log('Payment already in progress...');
+        return;
+      }
+      
+      isProcessingPayment = true;
+      
+      // Disable the button to prevent multiple clicks
+      const saveButton = document.getElementById('savePayment');
+      const originalText = saveButton.textContent;
+      saveButton.disabled = true;
+      saveButton.textContent = 'Processing...';
+      
+      try {
+        const billId = document.getElementById('paymentBillId').value;
+        const paymentDate = document.getElementById('paymentDate').value;
+        const notes = document.getElementById('paymentNotes').value;
+      
+      const isRegularPayment = document.getElementById('regularPayment').checked;
+      const isUsingDeposits = document.getElementById('useDeposits').checked;
+      
+      const payments = [];
+      
+      if (isRegularPayment) {
+        // Regular payment: entire bill with one payment method
+        const paymentMethod = document.getElementById('entireBillPaymentMethod').value;
+        const paymentAmount = parseFloat(document.getElementById('regularPaymentAmount').value || 0);
+        
+        if (!paymentMethod) {
+          alert('Please select a payment method');
+          isProcessingPayment = false;
+          saveButton.disabled = false;
+          saveButton.textContent = originalText;
+          return;
+        }
+        
+        if (paymentAmount <= 0) {
+          alert('Please enter a valid payment amount');
+          isProcessingPayment = false;
+          saveButton.disabled = false;
+          saveButton.textContent = originalText;
+          return;
+        }
+        
+        if (paymentAmount > window.billAmounts.total) {
+          alert('Payment amount cannot exceed the total bill amount');
+          isProcessingPayment = false;
+          saveButton.disabled = false;
+          saveButton.textContent = originalText;
+          return;
+        }
+        
+        const isPartialPayment = paymentAmount < window.billAmounts.total;
+        const description = isPartialPayment ? 'Partial Bill Payment' : 'Complete Bill Payment';
+        
+        payments.push({
+          type: 'full_bill',
+          method: paymentMethod,
+          amount: paymentAmount,
+          description: description
+        });
+        
+      } else if (isUsingDeposits) {
+        // Using deposits
+        const useAdvancePayment = document.getElementById('useAdvancePayment').checked;
+        const useSecurityDeposit = document.getElementById('useSecurityDeposit').checked;
+        
+        // Handle advance payment for rent
+        if (useAdvancePayment) {
+          const availableAdvance = window.currentDepositBalance.advance_payment.available;
+          const rentAmount = window.billAmounts.rent;
+          const advancePaymentAmount = Math.min(rentAmount, availableAdvance);
+          
+          if (advancePaymentAmount > 0) {
+            payments.push({
+              type: 'rent',
+              method: 'advance_payment',
+              amount: advancePaymentAmount,
+              description: 'Monthly Rent (Advance Payment)'
+            });
+          }
+        }
+        
+        // Handle security deposit for utilities
+        if (useSecurityDeposit && window.securityDepositCalculation) {
+          const calc = window.securityDepositCalculation;
+          
+          if (calc.securityDepositWillPay > 0) {
+            payments.push({
+              type: 'utilities_combined',
+              method: 'security_deposit',
+              amount: calc.securityDepositWillPay,
+              description: 'Utilities & Extra Fees (Security Deposit)'
+            });
+          }
+        }
+        
+        // Handle remaining amount payment
+        const remainingAmount = parseFloat(document.getElementById('remainingAmountToPay').value || 0);
+        const remainingMethod = document.getElementById('remainingPaymentMethod').value;
+        
+        if (remainingAmount > 0 && remainingMethod) {
+          payments.push({
+            type: 'remaining',
+            method: remainingMethod,
+            amount: remainingAmount,
+            description: 'Remaining Bill Amount'
+          });
+        }
+      }
+      
+        if (payments.length === 0) {
+          alert('Please select at least one payment method');
+          isProcessingPayment = false;
+          saveButton.disabled = false;
+          saveButton.textContent = originalText;
+          return;
+        }
+      
+        // Process payments sequentially to avoid database deadlocks
+        const results = [];
+        
+        for (let i = 0; i < payments.length; i++) {
+          const payment = payments[i];
+          
+          // Add small delay between payments to reduce database contention
+          if (i > 0) {
+            await new Promise(resolve => setTimeout(resolve, 300));
+          }
+          
+          const result = await processIndividualPayment(billId, payment, paymentDate, notes);
+          results.push(result);
+          
+          // If any payment fails, stop processing
+          if (!result.success) {
+            console.error(`Payment ${i + 1} failed:`, result.error);
+            break;
+          }
+        }
+        
+        // Check if all payments succeeded
+        const allSuccessful = results.every(result => result.success);
+        
+        // Close modal immediately for better UX
+          paymentModal.hide();
+        
+        if (allSuccessful) {
+          // Show appropriate success message
+          const hasPartialPayment = isUsingDeposits && parseFloat(document.getElementById('remainingAmountToPay').value || 0) > 0 && !document.getElementById('remainingPaymentMethod').value;
+          const successMessage = hasPartialPayment 
+            ? 'Partial payment recorded successfully! Some fees remain unpaid.'
+            : 'Payment recorded successfully!';
+            
+          showSuccess(successMessage, document.getElementById('alertContainer'));
+          
+          // Refresh data in background
+          setTimeout(() => {
+            loadPendingBills();
+          loadActiveBills();
+          loadPaidBills();
+          }, 100);
+        } else {
+          const failures = results.filter(result => !result.success);
+          alert(`Some payments failed: ${failures.map(f => f.error).join(', ')}`);
+        }
+        
+      } catch (error) {
+        console.error('Payment processing error:', error);
+        alert('Error processing payments');
+      } finally {
+        // Re-enable the button and reset state
+        isProcessingPayment = false;
+        saveButton.disabled = false;
+        saveButton.textContent = originalText;
+      }
+    }
+    
+    // Process individual payment
+    async function processIndividualPayment(billId, payment, paymentDate, notes) {
+      try {
+        // Handle deposit payments
+        if (payment.method === 'advance_payment' || payment.method === 'security_deposit') {
+          return await handleDepositPayment(billId, payment.method, payment.amount, payment.type, notes);
+        }
+        
+        // Handle regular payments
+        const formData = {
+          bill_id: billId,
+          amount: payment.amount,
+          payment_date: paymentDate,
+          payment_method: payment.method,
+          notes: `${payment.description} - ${notes || ''}`.trim()
+        };
+
+        const response = await fetch('/api/payments', {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(formData)
+        });
+        
+        const data = await response.json();
+        return { success: data.success, error: data.message };
+        
+      } catch (error) {
+        console.error('Individual payment error:', error);
+        return { success: false, error: error.message };
+      }
+    }
+    
+    // Handle deposit payment
+    async function handleDepositPayment(billId, transactionType, amount, paymentType, notes) {
+      try {
+        // Validate deposit availability
+        if (!window.currentDepositBalance) {
+          return { success: false, error: 'Please wait for deposit balance to load' };
+        }
+        
+        const balance = window.currentDepositBalance;
+        const availableAmount = transactionType === 'advance_payment' ? 
+          balance.advance_payment.available : balance.security_deposit.available;
+        
+        if (amount > availableAmount) {
+          return { success: false, error: `Insufficient ${transactionType.replace('_', ' ')} balance. Available: ₱${availableAmount.toFixed(2)}` };
+        }
+        
+        const depositStatus = transactionType === 'advance_payment' ? 
+          balance.advance_payment.status : balance.security_deposit.status;
+        
+        if (depositStatus !== 'paid') {
+          return { success: false, error: `${transactionType.replace('_', ' ')} must be marked as paid before using` };
+        }
+        
+        // Map payment type to usage type
+        let usageType;
+        switch (paymentType) {
+          case 'rent':
+            usageType = 'rent';
+            break;
+          case 'extra_fees':
+            usageType = 'extra_fees';
+            break;
+          case 'electricity':
+            usageType = 'electricity';
+            break;
+          case 'water':
+            usageType = 'water';
+            break;
+          default:
+            usageType = 'full_bill';
+        }
+        
+        // Get bill details to find tenant
+        const billResponse = await fetch(`/api/bills/${billId}`, {
+          headers: getAuthHeaders()
+        });
+        
+        const billData = await billResponse.json();
+        if (!billData.success) {
+          return { success: false, error: 'Error loading bill details' };
+        }
+        
+        const tenantId = billData.bill.tenant_id;
+        
+        // Use deposit for bill
+        const depositData = {
+          transaction_type: transactionType,
+          amount: amount,
+          used_for: usageType,
+          description: `${transactionType.replace('_', ' ')} used for ${paymentType} - ${notes || ''}`
+        };
+        
+        const response = await fetch(`/api/deposits/tenant/${tenantId}/use/${billId}`, {
+          method: 'POST',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(depositData)
+        });
+        
+        const data = await response.json();
+        return { success: data.success, error: data.message };
+        
+      } catch (error) {
+        console.error('Deposit payment error:', error);
+        return { success: false, error: 'Error processing deposit payment' };
+      }
+    }
+    
+    // Helper functions
+    function formatDate(date) {
+      return new Date(date).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit'
+      });
+    }
+
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP'
+      }).format(amount);
+    }
+
+    function getStatusBadgeClass(status) {
+      switch (status) {
+        case 'paid': return 'bg-success';
+        case 'partial': return 'bg-warning';
+        default: return 'bg-danger';
+      }
+    }
+
+    function refreshData() {
+      loadPendingBills();
+      loadActiveBills();
+      loadPaidBills();
+    }
+
+    // View bill details
+    function viewBillDetails(billId) {
+      // For now, just show an alert
+      alert('Bill details view - to be implemented');
+    }
+
+    // Download receipt
+    async function downloadReceipt(billId) {
+      try {
+        const response = await fetch(`/api/receipts/download/${billId}`, {
+          headers: getAuthHeaders()
+        });
+        
+        if (response.ok) {
+          // Get filename from Content-Disposition header or create default
+          const contentDisposition = response.headers.get('Content-Disposition');
+          let filename = `receipt-${billId}.pdf`;
+          
+          if (contentDisposition) {
+            const matches = /filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/.exec(contentDisposition);
+            if (matches != null && matches[1]) {
+              filename = matches[1].replace(/['"]/g, '');
+            }
+          }
+          
+          // Create blob and download
+          const blob = await response.blob();
+          const url = window.URL.createObjectURL(blob);
+          
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = filename;
+          document.body.appendChild(a);
+          a.click();
+          
+          // Clean up
+          window.URL.revokeObjectURL(url);
+          document.body.removeChild(a);
+          
+          showSuccess('Receipt downloaded successfully!', document.getElementById('alertContainer'));
+        } else {
+          const errorData = await response.json();
+          alert(errorData.message || 'Failed to download receipt');
+        }
+      } catch (error) {
+        console.error('Download receipt error:', error);
+        alert('Error downloading receipt');
+      }
+    }
+
+    // Settings functions
+
+    // Load current billing rates
+    async function loadBillingRates() {
+      try {
+        const response = await fetch('/api/settings/billing-rates', {
+          headers: getAuthHeaders()
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          currentRates = data.rates;
+          
+          // Only update form fields if they exist
+          const electricityRateEl = document.getElementById('electricityRate');
+          const waterRateEl = document.getElementById('waterRate');
+          const roomRateEl = document.getElementById('roomRate');
+          
+          if (electricityRateEl) electricityRateEl.value = currentRates.electric_rate_per_kwh || 12.00;
+          if (waterRateEl) waterRateEl.value = currentRates.water_fixed_amount || 200.00;
+          if (roomRateEl) roomRateEl.value = currentRates.default_room_rate || 3500.00;
+        } else {
+          console.error('Failed to load billing rates:', data.message);
+        }
+      } catch (error) {
+        console.error('Error loading billing rates:', error);
+      }
+    }
+
+    // Update billing rates
+    async function updateBillingRates() {
+      const rates = {
+        electric_rate_per_kwh: parseFloat(document.getElementById('electricityRate').value),
+        water_fixed_amount: parseFloat(document.getElementById('waterRate').value),
+        default_room_rate: parseFloat(document.getElementById('roomRate').value)
+      };
+
+      // Validate rates
+      if (isNaN(rates.electric_rate_per_kwh) || rates.electric_rate_per_kwh <= 0) {
+        alert('Please enter a valid electricity rate');
+        return;
+      }
+
+      if (isNaN(rates.water_fixed_amount) || rates.water_fixed_amount <= 0) {
+        alert('Please enter a valid water rate');
+        return;
+      }
+
+      if (isNaN(rates.default_room_rate) || rates.default_room_rate <= 0) {
+        alert('Please enter a valid room rate');
+        return;
+      }
+
+      try {
+        const response = await fetch('/api/settings/billing-rates', {
+          method: 'PUT',
+          headers: getAuthHeaders(),
+          body: JSON.stringify(rates)
+          });
+          
+          const data = await response.json();
+          
+          if (data.success) {
+          currentRates = rates;
+          if (settingsModal) {
+          settingsModal.hide();
+          }
+          showSuccess('Billing rates updated successfully! New rates will apply to future bills.', document.getElementById('alertContainer'));
+          } else {
+          alert(data.message || 'Error updating billing rates');
+          }
+        } catch (error) {
+        console.error('Error updating billing rates:', error);
+        alert('Error updating billing rates');
+      }
+    }
+
+    // Initialize settings modal (wait for DOM to be ready)
+    let settingsModal;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize settings modal after DOM is loaded
+      const settingsModalElement = document.getElementById('settingsModal');
+      if (settingsModalElement) {
+        settingsModal = new bootstrap.Modal(settingsModalElement, {
+          backdrop: 'static',
+          keyboard: false
+        });
+
+    // Load rates when settings modal is opened
+        settingsModalElement.addEventListener('show.bs.modal', loadBillingRates);
+      }
+    });
+  </script>
+
+  <!-- Settings Modal -->
+  <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">
+            <i class="fas fa-cog"></i> Billing Settings
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="alert alert-info">
+            <i class="fas fa-info-circle"></i>
+            <strong>Note:</strong> Changes will apply to all future bills created after saving.
+          </div>
+
+          <form id="settingsForm">
+            <div class="mb-3">
+              <label for="electricityRate" class="form-label">
+                <i class="fas fa-bolt text-warning"></i> Electricity Rate (₱ per kWh)
+              </label>
+              <div class="input-group">
+                <span class="input-group-text">₱</span>
+                <input type="number" class="form-control" id="electricityRate" step="0.01" min="0" required>
+                <span class="input-group-text">per kWh</span>
+              </div>
+              <div class="form-text">Current rate applies to all room electricity calculations</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="waterRate" class="form-label">
+                <i class="fas fa-tint text-info"></i> Water Rate (₱ per room)
+              </label>
+              <div class="input-group">
+                <span class="input-group-text">₱</span>
+                <input type="number" class="form-control" id="waterRate" step="0.01" min="0" required>
+                <span class="input-group-text">per room</span>
+              </div>
+              <div class="form-text">Fixed water amount charged to all rooms monthly</div>
+            </div>
+
+            <div class="mb-3">
+              <label for="roomRate" class="form-label">
+                <i class="fas fa-home text-primary"></i> Default Room Rate (₱ per month)
+              </label>
+              <div class="input-group">
+                <span class="input-group-text">₱</span>
+                <input type="number" class="form-control" id="roomRate" step="0.01" min="0" required>
+                <span class="input-group-text">per month</span>
+              </div>
+              <div class="form-text">Default monthly rent for new rooms (can be adjusted per room)</div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-primary" onclick="updateBillingRates()">
+            <i class="fas fa-save"></i> Save Changes
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html> 
